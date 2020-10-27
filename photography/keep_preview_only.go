@@ -39,12 +39,13 @@ func deleteFilePath(filePaths []string) {
 
 func analyzeFilesToDelete(dirPath string) ([]string, error) {
 	var filesToKeep []string
+	var filesToDelete []string
 	var allFileName []string
 	filePathMap := make(map[string]bool)
 	dirPath = filepath.Clean(dirPath)
 	fileInfos, err := ioutil.ReadDir(dirPath)
 	if err != nil {
-		return filesToKeep, err
+		return filesToDelete, err
 	}
 	for _, fi := range fileInfos {
 		filePathMap[fi.Name()] = true
@@ -62,7 +63,7 @@ func analyzeFilesToDelete(dirPath string) ([]string, error) {
 			filesToKeep = append(filesToKeep, fiName)
 		}
 	}
-	filesToDelete := unique(append(allFileName, filesToKeep...))
+	filesToDelete = unique(append(allFileName, filesToKeep...))
 	var filePathToDelete []string
 	for _, fileName := range filesToDelete {
 		filePathToDelete = append(filePathToDelete, filepath.Join(dirPath, fileName))
