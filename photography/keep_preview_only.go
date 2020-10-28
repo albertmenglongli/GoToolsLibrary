@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 )
@@ -71,6 +72,25 @@ func analyzeFilesToDelete(dirPath string) ([]string, error) {
 	return filePathToDelete, nil
 }
 
+func dfs(dirPath string) {
+	dirPath = filepath.Clean(dirPath)
+	fileInfos, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return
+	}
+	for _, fi := range fileInfos {
+		fiPath := filepath.Join(dirPath, fi.Name())
+		if fi.IsDir() && (fi.Mode()&os.ModeSymlink == 0) {
+			dfs(fiPath)
+		}
+	}
+	filePathToDelete, err := analyzeFilesToDelete(dirPath)
+	if err != nil {
+		return
+	}
+	deleteFilePath(filePathToDelete)
+}
+
 func main() {
 	var dirPath string
 	if len(os.Args) >= 2 {
@@ -79,9 +99,17 @@ func main() {
 		fmt.Print("Enter dir path: ")
 		_, _ = fmt.Scanln(&dirPath)
 	}
-	filePathToDelete, err := analyzeFilesToDelete(dirPath)
+	curUser, err := user.Current()
 	if err != nil {
 		return
+	} else {
+		if strings.HasPrefix(dirPath, "~") {
+			dirPath = strings.Replace(dirPath, "~", curUser.HomeDir, 1)
+		}
+		if strings.HasPrefix(dirPath, ".") {
+			pwd, _ := os.Getwd()
+			dirPath = strings.Replace(dirPath, ".", pwd, 1)
+		}
 	}
-	deleteFilePath(filePathToDelete)
+	dfs(dirPath)
 }
