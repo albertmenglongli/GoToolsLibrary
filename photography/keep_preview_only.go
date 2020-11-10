@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -33,7 +34,12 @@ func deleteFilePath(filePaths []string) {
 	for _, filePath := range filePaths {
 		e := os.Remove(filePath)
 		if e != nil {
-			fmt.Println(e)
+			cmd := exec.Command("chflags", "nouchg", filePath)
+			err := cmd.Run()
+			if err != nil {
+				fmt.Println(err)
+			}
+			_ = os.Remove(filePath)
 		}
 	}
 }
@@ -58,7 +64,9 @@ func analyzeFilesToDelete(dirPath string) ([]string, error) {
 		switch {
 		case strings.HasSuffix(fiName, "CR2"):
 			if _, ok := filePathMap[fiNameWithoutExt+".JPG"]; !ok {
-				filesToKeep = append(filesToKeep, fiName)
+				if _, ok := filePathMap[fiNameWithoutExt+".jpg"]; !ok {
+					filesToKeep = append(filesToKeep, fiName)
+				}
 			}
 		default:
 			filesToKeep = append(filesToKeep, fiName)

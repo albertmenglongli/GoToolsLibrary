@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -69,9 +70,36 @@ func RenameFile(myFilePath, prefix, myPrefix string) {
 		newAbsFilePath := filepath.Join(absDir, newBaseName)
 		err := os.Rename(absFilePath, newAbsFilePath)
 		if err != nil {
-			fmt.Println(baseName + "->" + newBaseName + " Failed")
+			DeleteAfterChflags(myFilePath, prefix, myPrefix)
 		} else {
 			fmt.Println(baseName + "->" + newBaseName)
+		}
+	}
+}
+
+func DeleteAfterChflags(myFilePath, prefix, myPrefix string) {
+	baseName := filepath.Base(myFilePath)
+	absFilePath, _ := filepath.Abs(myFilePath)
+	absDir := filepath.Dir(absFilePath)
+	newBaseName := strings.Replace(baseName, prefix, myPrefix, 1)
+	newAbsFilePath := filepath.Join(absDir, newBaseName)
+	err := os.Rename(absFilePath, newAbsFilePath)
+	cmd := exec.Command("chflags", "nouchg", absFilePath)
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		err = os.Rename(absFilePath, newAbsFilePath)
+		if err != nil {
+			fmt.Println(baseName + "->" + newBaseName + " Failed")
+		} else {
+			cmd := exec.Command("chflags", "uchg", newAbsFilePath)
+			err := cmd.Run()
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(baseName + "->" + newBaseName)
+			}
 		}
 	}
 }
