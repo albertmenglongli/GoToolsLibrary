@@ -70,14 +70,14 @@ func RenameFile(myFilePath, prefix, myPrefix string) {
 		newAbsFilePath := filepath.Join(absDir, newBaseName)
 		err := os.Rename(absFilePath, newAbsFilePath)
 		if err != nil {
-			DeleteAfterChflags(myFilePath, prefix, myPrefix)
+			RenameAfterChflags(myFilePath, prefix, myPrefix)
 		} else {
 			fmt.Println(baseName + "->" + newBaseName)
 		}
 	}
 }
 
-func DeleteAfterChflags(myFilePath, prefix, myPrefix string) {
+func RenameAfterChflags(myFilePath, prefix, myPrefix string) {
 	baseName := filepath.Base(myFilePath)
 	absFilePath, _ := filepath.Abs(myFilePath)
 	absDir := filepath.Dir(absFilePath)
